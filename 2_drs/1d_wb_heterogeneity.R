@@ -1,4 +1,4 @@
-# --- WB: heterogeneity. Sort by fund-level statistics.
+# --- Use WB to estimate heterogeneity in DRS
 library(this.path)
 setwd(this.path::this.dir())
 source("../utility_functions/runmefirst.R")
@@ -7,8 +7,8 @@ library(lubridate)
 library(lme4)
 library(fixest)
 
-# basic functions
-source("../cluster2.R")
+# load some functions
+source("../utility_functions/cluster2_archive.R")
 
 # load data
 dat <- readRDS("../tmp/raw_data/reg_table_min.RDS")[order(fundid, yyyymm)]
@@ -29,12 +29,12 @@ rm(int, size_model)
 
 # use SMB loadings to represent style
 tmp <- copy(dat[, .(yyyymm, fundid, gross_return)])
-tt <- fread("../../../data/factors/ff5_plus_mom_monthly_factors.csv")[, .(yyyymm, mktRf, smb)]
+tt <- fread("../../data/factors/ff5_plus_mom_monthly_factors.csv")[, .(yyyymm, mktRf, smb)]
 tmp <- tmp[tt, on = .(yyyymm), nomatch = NULL]
 tt <- tmp[, .(obs = .N), fundid]
 
+# function to get SMB loading for one fund
 p.get_one_fund <- function(this_fundid) {
-    # this_fundid <- tt[1, fundid]
     mm <- lm(gross_return ~ mktRf + smb, data = tmp[fundid == this_fundid])
     return(data.table(fundid = this_fundid, smb_loading = mm$coefficients[3]))
 }

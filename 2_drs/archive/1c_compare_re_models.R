@@ -1,5 +1,4 @@
 # --- updated Min's code to use nlme instead. Sanity check that results are the same
-lm(list = ls())
 library(this.path)
 setwd(this.path::this.dir())
 library(tidyverse)

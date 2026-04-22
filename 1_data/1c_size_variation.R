@@ -1,16 +1,11 @@
-# --- Look at how large is size variation
+# --- Check the amount of fund size variation. This is only for doing back-of-the-envelope calculations in the paper
 library(this.path)
 setwd(this.path::this.dir())
 source("../utility_functions/runmefirst.R")
 options(width = 150)
 
-# get data
-# data <- readRDS("../../../data/funds/active_equity_fund_monthly_data.RDS")[, .(yyyymm, fundid, size_1 = mtna_1)]
-load("../../../Data_M/MFdata.RData")
-
-data <- copy(dat) %>% as.data.table()
-data[, yyyymm := 100 * year + month]
-data[, size_1 := exp(lag_logtna)]
+# data
+data <- readRDS("../../data/funds/min_sample.RDS")[, .(yyyymm, fundid, size_1 = exp(lag_logtna))]
 
 # produce a version that scales by monthly fund size changes
 tmp <- copy(data)
@@ -22,12 +17,12 @@ tmp[, adj_fund := Winsorize(adj_fund, quantile(adj_fund, probs = c(.005, .995)))
 tmp <- tmp[, .(adj_fund = weighted.mean(adj_fund, size_1)), yyyymm]
 tmp <- tmp[order(yyyymm)]
 
-# I guess this is close to market
-tt <- fread("../../../data/factors/ff5_plus_mom_monthly_factors.csv")[, .(yyyymm, mkt = mktRf + rf)]
+# merge with market return for adjustment
+tt <- fread("../../data/factors/ff5_plus_mom_monthly_factors.csv")[, .(yyyymm, mkt = mktRf + rf)]
 tmp <- tmp[tt, on = .(yyyymm), nomatch = NULL]
 rm(tt)
 
-# let's get cumulative
+# get cumulative
 tmp <- tmp[order(yyyymm)]
 tmp <- tmp[, .(yyyymm,
   cum_adj_fund = cumprod(1 + adj_fund),
@@ -50,6 +45,7 @@ out <- data[, .(min_size = min(size), max_size = max(size), obs = length(unique(
 out[, range := max_size / min_size - 1]
 out[, bin := ntile(obs, 20)]
 
+# plot the range of size variation as a function of fund life length
 tt <- out[, .(range = median(range), obs = mean(obs / 12)), .(bin, type)]
 ggplot(tt[obs <= 20], aes(x = obs, y = range, color = type)) +
   geom_line() +
@@ -58,4 +54,5 @@ ggplot(tt[obs <= 20], aes(x = obs, y = range, color = type)) +
   theme(text = element_text(size = 35)) +
   ggtitle("Size Variation")
 
+# median range of size variation for funds with at least 10 years of data
 out[obs >= 10 * 12, median(range), type]

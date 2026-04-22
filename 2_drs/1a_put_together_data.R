@@ -8,7 +8,7 @@ source("../utility_functions/runmefirst.R")
 # library(fixest)
 
 # load data
-dat <- readRDS("../../../data/funds/min_sample.RDS")[order(fundid, yyyymm)] %>% setDT()
+dat <- readRDS("../../data/funds/min_sample.RDS")[order(fundid, yyyymm)] %>% setDT()
 dat$year <- floor(dat$yyyymm / 100)
 
 # get lagged cpi-adjusted tna
@@ -17,8 +17,8 @@ dat[, idx := frank(yyyymm, ties.method = "dense")]
 dat <- merge(dat, dat[, .(idx = idx + 1, fundid, lag_logtna_cpi = log(tna_cpi))], by = c("idx", "fundid"), all.x = T)
 dat[is.na(lag_logtna_cpi), lag_logtna_cpi := lag_logtna]
 
-# also get market cap-adjusted
-tt <- readRDS("../../../data/macro/total_mkt_cap.RDS")
+# adjust by total market cap of stocks
+tt <- readRDS("../../data/macro/total_mkt_cap.RDS")
 total_mktcap_base <- tt[yyyymm == max(dat$yyyymm), total_mktcap]
 tt[, mktcap_adj := total_mktcap_base / total_mktcap]
 tt[, idx := frank(yyyymm, ties.method = "dense")]
@@ -50,5 +50,7 @@ dat <- dat |>
   setDT()
 rm(max_ym)
 
-# dat <- dat |> left_join(tmp, by = c("fundid"))
-saveRDS(dat, "../tmp/raw_data/reg_table_min.RDS")
+# save
+to_file <- "../tmp/raw_data/reg_table_min.RDS"
+dir.create(dirname(to_file), showWarnings = FALSE, recursive = TRUE)
+saveRDS(dat, to_file)

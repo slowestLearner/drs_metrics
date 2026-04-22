@@ -181,5 +181,3 @@ data$phi <- rep(fe, as.numeric(table(data$wficn)))
 mod1 <- lmer(alpha_CAPM ~ lag_logtna * as.factor(bin) + phi + si + (1 | wficn), data = data)
 obj1 <- robust.se.remodel(data = data, model = mod1, cluster = c("wficn", "year"))
 print(obj1)
-
-# ======= USE SMB loading to guess stle

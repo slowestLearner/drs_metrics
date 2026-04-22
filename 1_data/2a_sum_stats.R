@@ -1,11 +1,11 @@
-# --- Produce summary statistics
+# --- Produce summary statistics for the main sample
 library(this.path)
 setwd(this.path::this.dir())
 source("../utility_functions/runmefirst.R")
 options(width = 150)
 
 # Min's data
-data <- readRDS("../../../data/funds/min_sample.RDS")
+data <- readRDS("../../data/funds/min_sample.RDS")
 
 # # numbers to report
 # data[, length(unique(fundid))]
@@ -16,10 +16,9 @@ data <- data[order(fundid, yyyymm)]
 data[, starting_logtna := first(logtna), fundid]
 data[, starting_fund_age := first(fund_age), fundid]
 
-# a bunch of things are in percent
+# variables that are in percent
 vars_pct <- c(
   "gross_return", "net_return", "benchmark_adj_gret", "capm_adj_gret", "ff3_adj_gret", "carhart_adj_gret", "ff5_adj_gret", "ff6_adj_gret"
-  # ,"ner", "turnover"
 )
 data[, (vars_pct) := lapply(.SD, function(x) x * 100), .SDcols = vars_pct]
 
@@ -38,6 +37,7 @@ data <- melt(data, id.vars = "idx", variable.name = "var", value.name = "value")
   setDT()
 data <- data[vars, on = .(var)]
 
+# summaize and save
 out <- data[, .(
   obs = .N, obs_non_missing = sum(!is.na(value)),
   x_mean = mean(value, na.rm = T),

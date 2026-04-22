@@ -1,4 +1,4 @@
-# --- Wb: main effects
+# --- Use WB to estimate average DRS
 library(this.path)
 setwd(this.path::this.dir())
 source("../utility_functions/runmefirst.R")
@@ -6,9 +6,10 @@ library(tidyverse)
 library(lubridate)
 library(lme4)
 library(fixest)
+options(width = 200)
 
-# basic functions
-source("../cluster2.R")
+# overwrite some functions
+source("../utility_functions/cluster2_archive.R")
 
 # load data
 dat <- readRDS("../tmp/raw_data/reg_table_min.RDS")[order(fundid, yyyymm)]
@@ -29,7 +30,7 @@ dat <- rbindlist(list(
 ))
 
 
-# --- save size model estimates
+# --- estimate and save size models
 size_models <- list()
 
 # Define your dimensions
@@ -60,7 +61,7 @@ for (st in size_types) {
     toc()
 }
 
-# save these models, btw
+# save these models
 out <- data.table() # coefs
 out_fe <- data.table() # fixed effects
 
@@ -95,9 +96,12 @@ dir.create(to_dir, showWarnings = FALSE, recursive = TRUE)
 saveRDS(out, paste0(to_dir, "size_dynamics.RDS"))
 saveRDS(out_fe, paste0(to_dir, "size_dynamics_fe.RDS"))
 
+
 ## ----- WB estimates
 # size_type <- 'logtna'
 # size_model_num <- 1
+
+# function to estimate WB
 p.wb <- function(dat = dat, size_models, size_type = "logtna", size_model_num, ret.name = "benchmark_adj_gret") {
     key <- paste0(size_type, "_", size_model_num)
 
@@ -121,6 +125,7 @@ p.wb <- function(dat = dat, size_models, size_type = "logtna", size_model_num, r
 
 ret_types <- c("benchmark_adj_gret", "capm_adj_gret", "ff3_adj_gret", "carhart_adj_gret", "ff5_adj_gret", "ff6_adj_gret")
 
+# need to enlarge RAM
 options(future.globals.maxSize = 2000 * 1024^2) # Set to 3GB
 
 # this takes a while. each combination takes like 20-30 secs. there are 3 * 6 = 18 instances, so will take like 9 mins
@@ -140,52 +145,57 @@ for (this_size_type in size_types) {
     }
 }
 out_all <- copy(out)
-saveRDS(out_all, "../tmp/drs/estimation/wb.RDS")
+
+to_file <- "../tmp/drs/estimation/wb.RDS"
+dir.create(dirname(to_file), showWarnings = FALSE, recursive = TRUE)
+saveRDS(out_all, to_file)
 gc()
 
 
-# --- check variation of a_i and phi_i
 
-this_size_type <- "logtna"
-sub_dat <- copy(dat[size_type == this_size_type])
 
-# estimate phi and coefs
-i <- 1
-femod <- size_models[[paste0(this_size_type, "_", i)]]
-int <- fixef(femod)$fundid
-sub_dat$phi <- rep(int, as.numeric(table(sub_dat$fundid)))
-mod <- lmer(benchmark_adj_gret ~ lag_logtna + phi + si + (1 | fundid), data = sub_dat)
-ss <- summary(mod)
+# # --- check variation of a_i and phi_i
 
-sub_dat[, ret_no_size := benchmark_adj_gret - ss$coefficients[2, 1] * lag_logtna]
-# sub_dat[, ret_no_size := benchmark_adj_gret + 0.0026 * lag_logtna] # alternative, zhu (2018) estimate
-tmp <- sub_dat[, .(yyyymm, morningstar_category, fundid, ret_no_size, phi)]
+# this_size_type <- "logtna"
+# sub_dat <- copy(dat[size_type == this_size_type])
 
-# get rid of benchmark-based covariantion
-tmp[, ret_no_size_demeaned := ret_no_size - mean(ret_no_size), yyyymm]
-out <- tmp[, .(
-    obs = .N, a = mean(ret_no_size_demeaned), se_a = sd(ret_no_size_demeaned) / sqrt(.N),
-    phi = mean(phi), phi = last(phi)
-), fundid]
+# # estimate phi and coefs
+# i <- 1
+# femod <- size_models[[paste0(this_size_type, "_", i)]]
+# int <- fixef(femod)$fundid
+# sub_dat$phi <- rep(int, as.numeric(table(sub_dat$fundid)))
+# mod <- lmer(benchmark_adj_gret ~ lag_logtna + phi + si + (1 | fundid), data = sub_dat)
+# ss <- summary(mod)
 
-# get summaries
-p.summarize <- function(min_obs) {
-    return(out[obs >= min_obs, .(
-        min_obs = min_obs, num_funds = .N,
-        sd_a_naive = sd(a),
-        se_a = mean(se_a),
-        sd_a_corrected = sqrt(sd(a)^2 - mean(se_a)^2),
-        sd_phi = sd(phi), cor_a_phi = cor(a, phi)
-    )])
-}
+# sub_dat[, ret_no_size := benchmark_adj_gret - ss$coefficients[2, 1] * lag_logtna]
+# # sub_dat[, ret_no_size := benchmark_adj_gret + 0.0026 * lag_logtna] # alternative, zhu (2018) estimate
+# tmp <- sub_dat[, .(yyyymm, morningstar_category, fundid, ret_no_size, phi)]
 
-options(width = 160)
-rbindlist(lapply(c(0, 24, 36, 60, 120, 180, 240, 300), p.summarize))
+# # get rid of benchmark-based covariantion
+# tmp[, ret_no_size_demeaned := ret_no_size - mean(ret_no_size), yyyymm]
+# out <- tmp[, .(
+#     obs = .N, a = mean(ret_no_size_demeaned), se_a = sd(ret_no_size_demeaned) / sqrt(.N),
+#     phi = mean(phi), phi = last(phi)
+# ), fundid]
 
-# what about the expected gross return at a point in time?
-sub_dat[, a := mean(ret_no_size), fundid]
-sub_dat[, expected_gross_return := a - ss$coefficients[2, 1] * lag_logtna]
-sub_dat[, sd(expected_gross_return), yyyymm][, mean(V1)]
+# # get summaries
+# p.summarize <- function(min_obs) {
+#     return(out[obs >= min_obs, .(
+#         min_obs = min_obs, num_funds = .N,
+#         sd_a_naive = sd(a),
+#         se_a = mean(se_a),
+#         sd_a_corrected = sqrt(sd(a)^2 - mean(se_a)^2),
+#         sd_phi = sd(phi), cor_a_phi = cor(a, phi)
+#     )])
+# }
 
-sub_dat[, cor(a, lag_logtna), yyyymm][, mean(V1)]
-sub_dat[, cor(a, lag_logtna, method = "spearman"), yyyymm][, mean(V1)]
+# options(width = 160)
+# rbindlist(lapply(c(0, 24, 36, 60, 120, 180, 240, 300), p.summarize))
+
+# # what about the expected gross return at a point in time?
+# sub_dat[, a := mean(ret_no_size), fundid]
+# sub_dat[, expected_gross_return := a - ss$coefficients[2, 1] * lag_logtna]
+# sub_dat[, sd(expected_gross_return), yyyymm][, mean(V1)]
+
+# sub_dat[, cor(a, lag_logtna), yyyymm][, mean(V1)]
+# sub_dat[, cor(a, lag_logtna, method = "spearman"), yyyymm][, mean(V1)]

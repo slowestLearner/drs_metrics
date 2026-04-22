@@ -6,11 +6,11 @@ setwd(this.path::this.dir())
 source("../utility_functions/runmefirst.R")
 
 # get each fund, use rolling 36m regressions to compute alphas
-data <- readRDS("../../../data/funds/active_equity_fund_monthly_data.RDS")[, .(yyyymm, wficn, ret)]
+data <- readRDS("../../data/funds/active_equity_fund_monthly_data.RDS")[, .(yyyymm, wficn, ret)]
 data[, ret := Winsorize(ret, quantile(ret, probs = c(.005, .995))), yyyymm]
 
 # merge with factors and take out rf
-tmp <- fread("../../../data/factors/ff5_plus_mom_monthly_factors.csv")
+tmp <- fread("../../data/factors/ff5_plus_mom_monthly_factors.csv")
 data <- data[tmp, on = .(yyyymm), nomatch = NULL]
 rm(tmp)
 data[, ret := (1 + ret) / (1 + rf) - 1]
@@ -33,7 +33,7 @@ data[, idx := frank(yyyymm, ties.method = "dense")]
 data_all <- copy(data)
 rm(data)
 
-# ---- Let's estimate in a rolling window
+# ---- 1) estimate using rolling window
 
 lookback_period <- 36
 min_obs <- 24
@@ -100,11 +100,12 @@ tic()
 out <- rbindlist(lapply(files, p.get_one), use.names = T)
 toc()
 
+# combine into a single file
 to_file <- paste0(substr(to_dir, 1, nchar(to_dir) - 1), ".RDS")
 saveRDS(out, to_file)
-# unlist(to_dir, recursive = T)
+unlist(to_dir, recursive = T)
 
-# ---- Let's estimate using full sample. Require at least 24 obs
+# ---- 2) estimate using full sample. Require at least 24 obs
 
 
 # require some min num of obs
@@ -114,7 +115,7 @@ data[, obs := .N, wficn]
 data <- data[obs >= min_obs][, obs := NULL]
 
 
-# 2. Perform the regressions within the data.table using 'by'
+# Perform the regressions within the data.table using 'by'
 tic()
 out <- data[,
   {
