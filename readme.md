@@ -43,7 +43,4 @@ basic data processing
 ## `utility_functions/`
 
 - `utility_functions/runmefirst.R`: load libraries
-- `utility_functions/Analysis_DRS_forJ.R`: Comprehensive legacy analysis script defining core DRS/WB estimators and running baseline plus heterogeneity empirical analyses.
-- `utility_functions/cluster2.R`: Implements one-way/two-way clustered covariance and test utilities (`coeftest.cluster`, `coeftest.cluster.re`) used across estimation scripts.
-- `utility_functions/cluster2_archive.R`: Archived version of the clustered standard-error helper functions with older formatting/logic.
-- 
+- `utility_functions/cluster2_archive.R`: Implements one-way/two-way clustered covariance and test utilities (`coeftest.cluster`, `coeftest.cluster.re`) used across estimation scripts.

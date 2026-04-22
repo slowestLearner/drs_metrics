@@ -1,4 +1,3 @@
-rm(list = setdiff(ls(), "data_bk"))
 gc()
 library(arrow)
 library(fixest)
