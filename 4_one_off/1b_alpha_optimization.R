@@ -1,11 +1,11 @@
-# --- I probably need to use the first half to estimate and the second half to look at OOS
+# --- Solves short-constrained active portfolio QPs with OSQP, calibrates risk aversion to target active vol, and evaluates OOS active performance.
 library(this.path)
 setwd(this.path::this.dir())
 source("../utility_functions/runmefirst.R")
 library(Matrix)
 library(osqp)
 
-# get inputs
+# port optimization inputs
 mu_data <- readRDS("../tmp/one_off/short_constrained_alpha/inputs/port_expected_ret.RDS")
 cov_data <- readRDS("../tmp/one_off/short_constrained_alpha/inputs/port_covariance.RDS")
 w_data <- readRDS("../tmp/one_off/short_constrained_alpha/inputs/port_benchmark_weights.RDS")
@@ -20,7 +20,7 @@ mu_data <- mu_data[specs, on = .(file, ret_type)]
 cov_data <- cov_data[specs, on = .(file, ret_type)]
 w_data <- w_data[specs, on = .(file, ret_type)]
 
-# do port optimization
+# worker function for port optimization
 solve_qp_osqp <- function(cov_matrix, mean_vector, benchmark_weights, gamma, lw_shrinkage = 0.05, tolerance = 1e-10) {
     # can do shrinkage
     n <- nrow(cov_matrix)

@@ -1,4 +1,5 @@
-# --- Let me conduct an alternative wb and see if it kills biases
+# --- simulate and estimate using old DRS methods and WB. This code is slightly adapted from Min's code
+# method 5 now is WB
 library(this.path)
 setwd(this.path::this.dir())
 library(future.apply)
@@ -8,7 +9,8 @@ library(tidyverse)
 library(lme4)
 library(MASS)
 library(lubridate)
-source("../../../Data_M/cluster2.R")
+# source("../../../Data_M/cluster2.R")
+source("../utility_functions/cluster2_archive.R")
 
 
 # gendata is for the scenario of both growth (a_i, phi_i) and inception(a_i, q_{i0}) matching.
@@ -255,10 +257,7 @@ robust.se.remodel <- function(dat, model, cluster = c("fundid")) {
 }
 
 
-# -- J: updated. Also have the new CW estimator
-# dat <- copy(dd)
-# rule <- 4
-
+# -- J: updated this function to also have the new CW estimator
 simest.gm <- function(dat, rule, ni = 24) # rule = 0,1,2,3, 4 is the J-WB
 {
   if (rule %in% c(0, 4)) {
@@ -349,57 +348,70 @@ simest.gm <- function(dat, rule, ni = 24) # rule = 0,1,2,3, 4 is the J-WB
   return(list(best = best, tv = tv))
 }
 
+# num of simulations (choose 1,000 or so for the "full" exercise)
 nsim <- 30
 
-# base_spec <- data.table(b = 0, cor_a_stde = 0.15, cor_a_phi = 0.25, n_funds = 1000, n_periods = 240, note = "base")
-base_spec <- data.table(b = -0.0005, cor_a_stde = 0.15, cor_a_phi = 0.25, n_funds = 1000, n_periods = 240, note = "base")
+# base specification
+base_spec <- data.table(b = 0, cor_a_stde = 0.15, cor_a_phi = 0.25, n_funds = 1000, n_periods = 120, note = "base")
 
-# b_alternative <- c(0, -.001)
-# cor_a_stde_alternative <- c(0, 0.5)
+# --- if needed, can vary a number of things. We keep everything else under the baseline, and vary one thing at a time
 
-# n_periods_alternative <- c(60, 180, 240)
-# n_funds_alternative <- c(500, 2000)
-# cor_a_phi_alternative <- c(0, 0.125, 0.375, 0.5)
-cor_a_phi_alternative <- c(0, 0.5)
+# choose simulation parameters
+n_periods_alternative <- c(120) # c(60, 120, 180, 240)
+n_funds_alternative <- c(1000) # c(500, 1000, 2000)
+cor_a_phi_alternative <- c(0.25) # c(0, 0.125, 0.25, 0.375, 0.5)
+b_alternative <- c(0) # c(0, -.001)
+cor_a_stde_alternative <- c(0) # c(0, 0.5)
 
-# b_alternative <- c(0)
-# cor_a_stde_alternative <- c(0)
-
-# we are going to vary one at a time
+# set up the specifications: varying one thing at a time
 specs <- copy(base_spec)
 
-# for (this_b in b_alternative) {
-#   this_spec <- base_spec %>% mutate(b = this_b, note = "vary_b")
-#   specs <- rbind(specs, this_spec)
-# }
+if (length(setdiff(b_alternative, base_spec$b)) > 0) {
+  for (this_b in setdiff(b_alternative, base_spec$b)) {
+    this_spec <- base_spec %>% mutate(b = this_b, note = "vary_b")
+    specs <- rbind(specs, this_spec)
+  }
+}
 
-# for (this_cor_a_stde in cor_a_stde_alternative) {
-#   this_spec <- base_spec %>% mutate(cor_a_stde = this_cor_a_stde, note = "vary_cor_a_stde")
-#   specs <- rbind(specs, this_spec)
-# }
+if (length(setdiff(cor_a_phi_alternative, base_spec$cor_a_phi)) > 0) {
+  for (this_cor_a_phi in setdiff(cor_a_phi_alternative, base_spec$cor_a_phi)) {
+    this_spec <- base_spec %>% mutate(cor_a_phi = this_cor_a_phi, note = "var_cor_a_phi")
+    specs <- rbind(specs, this_spec)
+  }
+}
 
-# for (this_n_periods in n_periods_alternative) {
-#   this_spec <- base_spec %>% mutate(n_periods = this_n_periods, note = "vary_n_periods")
-#   specs <- rbind(specs, this_spec)
-# }
+if (length(setdiff(cor_a_stde_alternative, base_spec$cor_a_stde)) > 0) {
+  for (this_cor_a_stde in setdiff(cor_a_stde_alternative, base_spec$cor_a_stde)) {
+    this_spec <- base_spec %>% mutate(cor_a_stde = this_cor_a_stde, note = "vary_cor_a_stde")
+    specs <- rbind(specs, this_spec)
+  }
+}
 
-# for (this_n_funds in n_funds_alternative) {
-#   this_spec <- base_spec %>% mutate(n_funds = this_n_funds, note = "vary_n_funds")
-#   specs <- rbind(specs, this_spec)
-# }
+if (length(setdiff(n_periods_alternative, base_spec$n_periods)) > 0) {
+  for (this_n_periods in setdiff(n_periods_alternative, base_spec$n_periods)) {
+    this_spec <- base_spec %>% mutate(n_periods = this_n_periods, note = "vary_n_periods")
+    specs <- rbind(specs, this_spec)
+  }
+}
 
-for (this_cor_a_phi in cor_a_phi_alternative) {
-  this_spec <- base_spec %>% mutate(cor_a_phi = this_cor_a_phi, note = "var_cor_a_phi")
-  specs <- rbind(specs, this_spec)
+if (length(setdiff(n_funds_alternative, base_spec$n_funds)) > 0) {
+  for (this_n_funds in setdiff(n_funds_alternative, base_spec$n_funds)) {
+    this_spec <- base_spec %>% mutate(n_funds = this_n_funds, note = "vary_n_funds")
+    specs <- rbind(specs, this_spec)
+  }
+}
+
+if (length(setdiff(cor_a_stde_alternative, base_spec$cor_a_stde)) > 0) {
+  for (this_cor_a_stde in setdiff(cor_a_stde_alternative, base_spec$cor_a_stde)) {
+    this_spec <- base_spec %>% mutate(cor_a_stde = this_cor_a_stde, note = "vary_cor_a_stde")
+    specs <- rbind(specs, this_spec)
+  }
 }
 
 specs[, spec_idx := .I]
 
-# nb <- length(bseq) # number of b
-# nest <- 6 # number of estimators. Each fund exiting scenario has 6 estimators
 nest <- 5 # number of estimators. Each fund exiting scenario has 6 estimators
 ndropout <- 4 # number of fund exiting scenarios
-
 
 ## simulation
 for (this_spec_idx in specs$spec_idx) {
@@ -451,10 +463,11 @@ for (this_spec_idx in specs$spec_idx) {
     b = b, cor_a_phi = cor_a_phi, bias = bias, stderr = ss, rmse = rmse, rejectfrac = frac.reject
   )
 
-  to_dir <- paste0("tmp/1d/240_periods_with_new_WB/phi_mean_0.12_phi_sd_0.03/nsim_", nsim, "_q0_max_100/")
+  to_dir <- paste0("tmp/120_periods_with_new_WB/phi_mean_0.12_phi_sd_0.03/nsim_", nsim, "/")
   dir.create(to_dir, recursive = T, showWarnings = F)
   write.csv(output, paste0(to_dir, "spec_idx_", this_spec_idx, ".csv"), row.names = F)
   toc()
+
 
   plan(sequential)
 }

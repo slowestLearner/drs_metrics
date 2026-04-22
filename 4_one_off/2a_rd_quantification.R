@@ -1,9 +1,9 @@
-# --- Let me use Table 4 of Zhu (2018)
+# --- Uses tabulated Zhu (2018) size-effect estimates to plot linear/log specifications and numerically integrate total decline.
 library(this.path)
 setwd(this.path::this.dir())
 source("../utility_functions/runmefirst.R")
 
-# Table 4
+# Table 4 from Zhu (2018)
 data <- data.table(
   size = c(20, 41, 71, 112, 174, 270, 432, 689, 1266, 3828),
   linear_spec = c(33.5, 24.9, 21.3, 16.8, 26.5, 18.8, 26.7, 25.1, 21.0, 7.3),
@@ -12,12 +12,12 @@ data <- data.table(
 data <- melt(data, id.vars = "size", variable.name = "type", value.name = "effect") %>% mutate(type = as.character(type))
 data_all <- copy(data)
 
-ggplot(data, aes(x = size, y = 12 * effect / 100, color = type)) +
-  geom_line() +
-  geom_point() +
-  geom_hline(yintercept = 0) +
-  scale_x_continuous(trans = "log10") +
-  theme(text = element_text(size = 35))
+# ggplot(data, aes(x = size, y = 12 * effect / 100, color = type)) +
+#   geom_line() +
+#   geom_point() +
+#   geom_hline(yintercept = 0) +
+#   scale_x_continuous(trans = "log10") +
+#   theme(text = element_text(size = 35))
 
 # integrate effects
 data <- copy(data_all[type == "log_spec"])

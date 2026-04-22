@@ -1,10 +1,11 @@
 # --- Put together inputs (mu, Sigma) for subsequent portfolio optimization
+# this is for the exercise where I argue that look, if you do short-constrained mean-variance optimization, you do not get high Sharpe ratios
 library(this.path)
 setwd(this.path::this.dir())
 source("../utility_functions/runmefirst.R")
 
 # get covariance and returns by sample
-data <- readRDS("../../../data/factors/2x4x4_ff_portfolios.RDS")
+data <- readRDS("../../data/factors/2x4x4_ff_portfolios.RDS")
 vars <- setdiff(names(data), c("ret_vw", "ret_ew"))
 data <- melt(data, id.vars = vars, variable.name = "ret_type", value.name = "ret") %>% mutate(ret_type = as.character(ret_type))
 

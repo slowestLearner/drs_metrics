@@ -1,4 +1,4 @@
-# --- Let me use Table 4 of Zhu (2018)
+# --- Creates a toy time-series illustration comparing raw versus forward-demeaned returns to explain the RD-style transformation mechanism.
 library(this.path)
 setwd(this.path::this.dir())
 source("../utility_functions/runmefirst.R")

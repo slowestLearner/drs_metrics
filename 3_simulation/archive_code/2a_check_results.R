@@ -1,6 +1,6 @@
+# -- take a look at results
 library(this.path)
 setwd(this.path::this.dir())
-library(future.apply)
 source("../utility_functions/runmefirst.R")
 
 # check results after changing parameters. Just bias
