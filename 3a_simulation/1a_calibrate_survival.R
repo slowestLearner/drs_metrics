@@ -1,7 +1,7 @@
 # --- calibrate survival probabilities out to 20 years
 library(this.path)
 setwd(this.path::this.dir())
-source("~/.runmefirst")
+source("../utility_functions/runmefirst.R")
 
 data <- readRDS("../../../data/funds/min_sample.RDS")
 data[, yyyy := floor(yyyymm / 100)]

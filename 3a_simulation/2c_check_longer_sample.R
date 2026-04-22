@@ -1,7 +1,7 @@
 library(this.path)
 setwd(this.path::this.dir())
 library(future.apply)
-source("~/.runmefirst")
+source("../utility_functions/runmefirst.R")
 
 # check results after changing parameters. Just bias
 from_dir <- "tmp/sim_data_240_periods/nsim_100_no_rho2_rho3"

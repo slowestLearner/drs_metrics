@@ -1,7 +1,7 @@
 # -- this is simple, can always do this
 library(this.path)
 setwd(this.path::this.dir())
-source("~/.runmefirst")
+source("../utility_functions/runmefirst.R")
 options(width = 150)
 
 # read some inputs

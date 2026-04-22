@@ -1,7 +1,7 @@
 # -- Let's try to visualize WB estimates across a bunch of specifications
 library(this.path)
 setwd(this.path::this.dir())
-source("~/.runmefirst")
+source("../utility_functions/runmefirst.R")
 options(width = 150)
 
 # inputs

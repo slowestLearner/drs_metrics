@@ -2,7 +2,7 @@
 library(this.path)
 setwd(this.path::this.dir())
 library(future.apply)
-source("~/.runmefirst")
+source("../utility_functions/runmefirst.R")
 library(tidyverse)
 library(lme4)
 library(MASS)
