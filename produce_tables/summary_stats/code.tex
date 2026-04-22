@@ -1,0 +1,98 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[
+]{article}
+\usepackage{xcolor}
+\usepackage[left=1cm,right=1cm,top=0.9cm,bottom=1.2cm]{geometry}
+\usepackage{amsmath,amssymb}
+\setcounter{secnumdepth}{5}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{graphicx}
+\makeatletter
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
+% Set default figure placement to htbp
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage[]{natbib}
+\bibliographystyle{plainnat}
+\usepackage{rotating}
+\usepackage{float}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\author{}
+\date{\vspace{-2.5em}}
+
+\begin{document}
+
+\begin{tabular}{lcccccccc}
+  \toprule & & & & \multicolumn{5}{c}{Percentiles} \\
+ \cmidrule(l){5-9} 
+  & Fund-month & Mean & Std dev & 1\% & 25\% & 50\% & 75\% & 99\% \\ 
+   \cmidrule(l){2-9} \vspace{5pt} & (1) & (2) & (3) & (4) & (5) & (6) & (7) & (8) \\ 
+  Gross ret (\%) & 577,911 & 0.85 & 5.12 & -13.94 & -1.77 & 1.25 & 3.81 & 13.13 \\ 
+  Net ret (\%) & 577,911 & 0.75 & 5.12 & -14.08 & -1.86 & 1.16 & 3.72 & 13.03 \\ 
+  Benchmark adj ret (\%) & 577,911 & 0.03 & 1.88 & -5.07 & -0.86 & 0.00 & 0.87 & 5.48 \\ 
+  FF3 alpha (\%) & 577,911 & 0.03 & 1.70 & -4.62 & -0.83 & 0.02 & 0.87 & 4.80 \\ 
+  Carhart alpha (\%) & 577,911 & 0.02 & 1.65 & -4.47 & -0.82 & 0.02 & 0.86 & 4.62 \\ 
+  FF5 alpha (\%) & 577,911 & 0.02 & 1.63 & -4.32 & -0.82 & -0.00 & 0.82 & 4.67 \\ 
+  FF5M alpha (\%) & 577,911 & 0.02 & 1.57 & -4.17 & -0.80 & -0.00 & 0.81 & 4.48 \\ 
+  Fund TNA (\$m) & 577,911 & 1,292 & 3,230 & 12 & 76 & 268 & 1,004 & 15,740 \\ 
+  Lag fund TNA (log) & 577,911 & 6.01 & 1.73 & 2.86 & 4.68 & 5.94 & 7.24 & 9.95 \\ 
+  Expense ratio (\%) & 577,911 & 0.09 & 0.03 & 0.01 & 0.07 & 0.09 & 0.11 & 0.19 \\ 
+  Fund age (years) & 577,911 & 14.41 & 11.98 & 0.54 & 5.53 & 11.20 & 19.76 & 53.51 \\ 
+  Fund starting TNA (log) & 577,911 & 4.47 & 1.57 & 2.73 & 3.12 & 4.03 & 5.46 & 8.97 \\ 
+  Starting fund age (years) & 577,911 & 5.02 & 9.92 & 0.09 & 0.27 & 1.11 & 4.69 & 56.32 \\ 
+   \bottomrule 
+\end{tabular}
+
+\end{document}

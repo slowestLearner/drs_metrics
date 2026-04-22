@@ -1,0 +1,176 @@
+---
+author: ""
+header-includes:
+   - \usepackage{rotating}
+   - \usepackage{float}
+   - \usepackage{natbib}
+   - \usepackage{booktabs}
+   - \usepackage{multirow}
+geometry: "left=1cm,right=1cm,top=0.9cm,bottom=1.2cm"
+output: 
+  pdf_document:
+    citation_package: natbib
+    keep_tex: true
+    number_sections: true
+#bibliography: ref.bib
+link-citations: yes
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r, echo = FALSE, results = 'asis', warning=FALSE, message=FALSE}
+rm(list = ls())
+options(xtable.comment = FALSE)
+library(reshape)
+library(data.table)
+library(dplyr)
+library(naniar)
+library(scales)
+library(tidyr)
+library(xtable)
+library(pracma)
+library(this.path)
+setwd(this.path::this.dir())
+options(width = 180)
+
+# --- Panel A
+data <- readRDS("../../tmp/drs/estimation/size_dynamics.RDS")[size_type == "logtna"]
+tmp <- unique(data[, list(var)])
+tmp[, var_idx := 1:nrow(tmp)]
+data <- merge(data, tmp, by = "var")
+data[, var := paste0(var_idx, "_", var)]
+rm(tmp)
+
+# add stars
+cuts <- abs(qnorm(c(.01, .05, .1) / 2))
+data[, abs_tstat := abs(coef / se)]
+data[, ss := ifelse(abs_tstat > cuts[1], 3, ifelse(abs_tstat > cuts[2], 2, ifelse(abs_tstat > cuts[3], 1, 0)))]
+data[, coef_lab := paste0("$", sprintf("%.2f", coef))]
+data[, ss_lab := sapply(data[, ss], function(x) {
+  ifelse(x > 0,
+    paste0("^{", strcat(rep("*", x)), "}$"),
+    "$"
+  )
+})]
+data[, coef_lab := paste0(coef_lab, ss_lab)]
+data[, ss_lab := NULL]
+data[, se_lab := paste0("$(", sprintf("%.2f", round(se, 3)), ")$")]
+rm(cuts)
+
+est <- cast(data[, list(var, spec_idx, coef_lab)], var ~ spec_idx) %>%
+  dplyr::mutate(group_id = 100 * row_number(), type = "coef") %>%
+  as.data.table()
+est[is.na(est)] <- ""
+est[, var := c("$q_{i,t-1}$", "$R_{i,t}$", "$Perf_{i,t-1}$", "$LogAge_{i,t-1}$", "$ExpRatio_{i,t-1}$", "$PerfVol_{i,t-1}$", "$BretAve_{i,t-1}$", "$BretVol_{i,t-1}$")]
+
+se <- cast(data[, list(var, spec_idx, se_lab)], var ~ spec_idx) %>%
+  dplyr::mutate(group_id = 100 * row_number() + 1, type = "se_lab") %>%
+  mutate(var = "") %>%
+  as.data.table()
+se[is.na(se)] <- ""
+
+tbl <- rbind(est, se)[order(group_id)]
+rm(est, se)
+
+# note controls
+ctrls <- data.table(
+  var = c("Fund FE", "Date FE"),
+  `1` = c("Y", "Y"), `2` = c("Y", "Y"),
+  `3` = c("Y", "N"), `4` = c("Y", "N"), group_id = 1000 + 0:1, type = ""
+)
+tbl <- bind_rows(tbl, ctrls)
+rm(ctrls)
+
+obs_and_r2 <- unique(data[, list(spec_idx, obs, r2 = ar2)]) %>%
+  mutate(
+    obs = comma(obs),
+    r2 = paste0("$", sprintf("%.3f", r2), "$")
+  ) %>%
+  pivot_longer(., -spec_idx) %>%
+  pivot_wider(name, names_from = "spec_idx", values_from = "value") %>%
+  dplyr::mutate(name = replace(name, name == "r2", "Adj $R^2$")) %>%
+  mutate(name = replace(name, name == "obs", "Obs")) %>%
+  rename(var = name) %>%
+  mutate(group_id = 2000 + 0:1, type = "")
+tbl <- bind_rows(tbl, obs_and_r2)
+rm(obs_and_r2)
+tbl[, c("group_id", "type") := NULL]
+tbl_A <- copy(tbl)
+
+# --- Panel B
+
+data <- readRDS("../../tmp/drs/estimation/size_dynamics_fe.RDS")[size_type == "logtna"]
+data <- data[, .(
+  x_mean = mean(phi),
+  sd = sd(phi),
+  q01 = quantile(phi, .01),
+  # q05 = quantile(phi, .05),
+  q25 = quantile(phi, .25),
+  q50 = quantile(phi, .50),
+  q75 = quantile(phi, .75),
+  # q95 = quantile(phi, .95),
+  q99 = quantile(phi, .99)
+), spec_idx]
+
+# Identify the columns to format (all except spec_idx)
+cols_to_format <- setdiff(names(data), "spec_idx")
+data[, (cols_to_format) := lapply(.SD, function(x) sprintf("%.3f", x)), .SDcols = cols_to_format]
+data <- t(data) %>%
+  as.data.table(., keep.rownames = "statistic") %>%
+  setDT()
+names(data) <- names(tbl_A)
+data <- data[var != "spec_idx"]
+data$var <- c("Mean", "SD", "1\\%", "25\\%", "50\\%", "75\\%", "99\\%")
+tbl_B <- copy(data)
+rm(data)
+
+col_names <- data.table(t(as.data.frame(c("", paste0("(", 1:4, ")")))))
+names(col_names) <- names(tbl_A)
+tbl_A <- rbind(col_names, tbl_A)
+tbl_B <- rbind(col_names, tbl_B)
+rm(col_names)
+
+tbl <- rbind(tbl_A, tbl_B)
+rm(tbl_A, tbl_B)
+
+align_vactor <- paste0("ll", paste0(rep("c", times = ncol(tbl) - 1), collapse = ""))
+x.side <- xtable(tbl, align = align_vactor)
+
+this_add_to_row <- list(
+  pos = list(-1, 0, 16, 18, 21, 23, nrow(tbl)),
+  command = c(
+    "\\toprule \\multicolumn{5}{c}{Panel A: Fund size process ($q_{i,t}$)} \\\\\n \n \\cmidrule(l){2-5}",
+    rep("\\vspace{5pt}", 3),
+    "\\hline \\multicolumn{5}{c}{Panel B: Fund fixed effects ($\\phi_i$)} \\\\\n \n \\cmidrule(l){2-5} \\vspace{5pt} \n",
+    "\\vspace{5pt}",
+    "\\bottomrule \n"
+  )
+)
+
+print(x.side,
+  type = "latex",
+  table.placement = "!ht",
+  include.rownames = FALSE,
+  include.colnames = FALSE,
+  tabular.environment = "tabular",
+  caption.placement = NULL, # "top", NULL
+  hline.after = NULL, # We don't need hline; we use booktabs
+  floating = FALSE, # whether \begin{Table} should be created (TRUE) or not (FALSE)
+  sanitize.text.function = force, # Important to treat content of first column as latex function
+  add.to.row = this_add_to_row
+)
+
+print(x.side,
+  type = "latex",
+  table.placement = "!ht",
+  include.rownames = FALSE,
+  include.colnames = FALSE,
+  tabular.environment = "tabular",
+  caption.placement = NULL, # "top", NULL
+  hline.after = NULL, # We don't need hline; we use booktabs
+  floating = FALSE, # whether \begin{Table} should be created (TRUE) or not (FALSE)
+  sanitize.text.function = force, # Important to treat content of first column as latex function
+  add.to.row = this_add_to_row,
+  file = "reg_size_dynamics.tex"
+)
+```

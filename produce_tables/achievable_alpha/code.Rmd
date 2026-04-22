@@ -1,0 +1,95 @@
+---
+author: ""
+header-includes:
+   - \usepackage{rotating}
+   - \usepackage{float}
+   - \usepackage{natbib}
+   - \usepackage{booktabs}
+   - \usepackage{multirow}
+geometry: "left=1cm,right=1cm,top=0.9cm,bottom=1.2cm"
+output: 
+  pdf_document:
+    citation_package: natbib
+    keep_tex: true
+    number_sections: true
+#bibliography: ref.bib
+link-citations: yes
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r, echo = FALSE, results = 'asis', warning=FALSE, message=FALSE}
+rm(list = ls())
+options(xtable.comment = FALSE)
+library(reshape)
+library(data.table)
+library(dplyr)
+library(naniar)
+library(scales)
+library(tidyr)
+library(xtable)
+library(pracma)
+library(DescTools)
+library(this.path)
+setwd(this.path::this.dir())
+
+# just use VW results
+data <- readRDS("../../tmp/one_off/short_constrained_alpha/outputs/outperformance_is_and_oos.RDS")
+data <- data[ret_type == "ret_vw"]
+data <- unique(data[, .(file, ret_is = 12 * active_port_ret, vol_is = sqrt(12) * active_port_vol, ret_oos = 12 * active_port_ret_oos, vol_oos = sqrt(12) * active_port_vol_oos)])
+data[, file := gsub(".csv", "", file)]
+data[, file := gsub("_", "-", file)]
+data[, file := toupper(file)]
+
+# format
+data <- cbind(data[, 1], sapply(data[, 2:5], function(x) {
+  paste0(sprintf("%.2f", 100 * x), "\\%")
+}))
+out <- copy(data)
+
+# add col names
+col_names <- data.table(t(as.data.frame(c("", sapply(1:(ncol(out) - 1), function(x) {
+  paste0("(", x, ")")
+})))))
+names(col_names) <- names(out)
+out <- bind_rows(col_names, out)
+rm(col_names)
+
+align_vactor <- paste0("ll", paste0(rep("c", times = ncol(out) - 1), collapse = ""))
+x.side <- xtable(out, align = align_vactor)
+
+this_add_to_row <- list(
+  pos = list(-1, nrow(out)),
+  command = c(
+    "\\toprule \\multirow{2}{*}{Portfolios} & \\multicolumn{2}{c}{In-sample (1963 - 1994)} & \\multicolumn{2}{c}{Out-of-sample (1995 - 2025)} \\\\\n \\cmidrule(l){2-3} \\cmidrule(l){4-5} & Bench-adj. return & Tracking Error & Bench-adj. return & Tracking Error  \\\\\n \\cmidrule(l){2-3} \\cmidrule(l){4-5}  \\vspace{5pt}",
+    "\\bottomrule \n"
+  )
+)
+
+print(x.side,
+  type = "latex",
+  table.placement = "!ht",
+  include.rownames = FALSE,
+  include.colnames = FALSE,
+  tabular.environment = "tabular",
+  caption.placement = NULL, # "top", NULL
+  hline.after = NULL, # We don't need hline; we use booktabs
+  floating = FALSE, # whether \begin{Table} should be created (TRUE) or not (FALSE)
+  sanitize.text.function = force, # Important to treat content of first column as latex function
+  add.to.row = this_add_to_row
+)
+
+print(x.side,
+  type = "latex",
+  table.placement = "!ht",
+  include.rownames = FALSE,
+  include.colnames = FALSE,
+  tabular.environment = "tabular",
+  caption.placement = NULL, # "top", NULL
+  hline.after = NULL, # We don't need hline; we use booktabs
+  floating = FALSE, # whether \begin{Table} should be created (TRUE) or not (FALSE)
+  sanitize.text.function = force, # Important to treat content of first column as latex function
+  add.to.row = this_add_to_row,
+  file = "achievable_alpha.tex"
+)
+```

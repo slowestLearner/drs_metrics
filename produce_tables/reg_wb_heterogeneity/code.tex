@@ -1,0 +1,101 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[
+]{article}
+\usepackage{xcolor}
+\usepackage[left=1cm,right=1cm,top=0.9cm,bottom=1.2cm]{geometry}
+\usepackage{amsmath,amssymb}
+\setcounter{secnumdepth}{5}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{graphicx}
+\makeatletter
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
+% Set default figure placement to htbp
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage[]{natbib}
+\bibliographystyle{plainnat}
+\usepackage{rotating}
+\usepackage{float}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\author{}
+\date{\vspace{-2.5em}}
+
+\begin{document}
+
+{[}1{]} 2 3 1
+
+\begin{tabular}{lcccccc}
+  \toprule & \multicolumn{3}{c}{Dependent variable: $r_{i,t}~(\%)$ } & \multicolumn{3}{c}{Sorting variable values} \\
+ \cmidrule(l){2-4} \cmidrule(l){5-7}
+    Sorting var: & Tracking error & Exp ratio & SMB loading & Tracking error & Exp ratio & SMB loading \\
+ \cmidrule(l){2-4} \cmidrule(l){5-7}  \vspace{5pt} & (1) & (2) & (3) & (1b) & (2b) & (3b) \\ 
+  $\phi_i$ & $1.448^{***}$ & $1.760^{***}$ & $1.541^{***}$ &  &  &  \\ 
+   & $(0.489)$ & $(0.562)$ & $(0.396)$ &  &  &  \\ 
+  $q_{i,0}$ & $-0.001$ & $-0.005$ & $-0.000$ &  &  &  \\ 
+   & $(0.004)$ & $(0.004)$ & $(0.004)$ &  &  &  \\ 
+  $q_{i,t-1}$ & $-0.017^{**}$ & $-0.022^{**}$ & $-0.016^{**}$ & 3.23 & 0.69 & -0.17 \\ 
+   & $(0.008)$ & $(0.011)$ & $(0.007)$ &  &  &  \\ 
+  $q_{i,t-1} \times \text{Bin2}$ & $-0.003$ & $-0.013^{**}$ & $-0.003$ & 4.90 & 1.02 & -0.00 \\ 
+   & $(0.004)$ & $(0.005)$ & $(0.005)$ &  &  &  \\ 
+  $q_{i,t-1} \times \text{Bin3}$ & $-0.008$ & $-0.023^{***}$ & $-0.011^{*}$ & 6.45 & 1.24 & 0.27 \\ 
+   & $(0.006)$ & $(0.008)$ & $(0.006)$ &  &  &  \\ 
+  $q_{i,t-1} \times \text{Bin4}$ & $-0.042^{***}$ & $-0.023^{***}$ & $-0.025^{***}$ & 9.85 & 1.69 & 0.73 \\ 
+   \vspace{5pt} & $(0.011)$ & $(0.007)$ & $(0.009)$ &  &  &  \\ 
+  Obs & 572,284 & 572,284 & 572,284 &  &  &  \\ 
+  Adj $R^2$ & 0.001 & 0.001 & 0.001 &  &  &  \\ 
+   \bottomrule 
+\end{tabular}
+
+\end{document}

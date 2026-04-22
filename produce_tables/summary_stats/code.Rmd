@@ -1,0 +1,130 @@
+---
+author: ""
+header-includes:
+   - \usepackage{rotating}
+   - \usepackage{float}
+   - \usepackage{natbib}
+   - \usepackage{booktabs}
+   - \usepackage{multirow}
+geometry: "left=1cm,right=1cm,top=0.9cm,bottom=1.2cm"
+output: 
+  pdf_document:
+    citation_package: natbib
+    keep_tex: true
+    number_sections: true
+#bibliography: ref.bib
+link-citations: yes
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r, echo = FALSE, results = 'asis', warning=FALSE, message=FALSE}
+rm(list = ls())
+options(xtable.comment = FALSE)
+library(data.table)
+library(dplyr)
+library(naniar)
+library(scales)
+library(tidyr)
+library(xtable)
+library(pracma)
+library(DescTools)
+library(this.path)
+setwd(this.path::this.dir())
+# options(width = 150)
+
+# sum stats
+data <- readRDS("../../tmp/raw_data/summary/min_sample_sum_stats.RDS")
+data[, var_idx := NULL]
+data <- data[!(var %in% c("capm_adj_gret", "turnover"))]
+data[, var_lab := c(
+  "Gross ret (\\%)", "Net ret (\\%)", "Benchmark adj ret (\\%)",
+  # "CAPM alpha (\\%)",
+  "FF3 alpha (\\%)", "Carhart alpha (\\%)", "FF5 alpha (\\%)", "FF5M alpha (\\%)",
+  "Fund TNA (\\$m)", "Lag fund TNA (log)", "Expense ratio (\\%)", "Fund age (years)", "Fund starting TNA (log)", "Starting fund age (years)"
+)]
+
+# format separately
+n <- ncol(data)
+target_cols <- names(data)[4:(n - 1)]
+data[, (target_cols) := lapply(.SD, as.character), .SDcols = target_cols]
+
+vars_to_comma <- c("tna")
+data[var %in% vars_to_comma,
+  (target_cols) := lapply(.SD, function(x) sprintf("%s", format(round(as.numeric(x)), big.mark = ","))),
+  .SDcols = target_cols
+]
+
+vars_to_numeric <- setdiff(data[, var], vars_to_comma)
+data[var %in% vars_to_numeric,
+  (target_cols) := lapply(.SD, function(x) sprintf("%.2f", as.numeric(x))),
+  .SDcols = target_cols
+]
+
+
+# choose variables
+data[, var := var_lab]
+data[, c("var_lab", "obs_non_missing") := NULL]
+data[, c("q05", "q95") := NULL]
+
+# this needs to be comma
+p.comma <- function(x) sprintf("%s", format(round(as.numeric(x)), big.mark = ","))
+data[, obs := p.comma(obs)]
+
+# add column numbers
+col_names <- data.table(t(as.data.frame(c("", paste0("(", 1:(ncol(data) - 1), ")")))))
+names(col_names) <- names(data)
+data <- bind_rows(col_names, data)
+rm(col_names)
+
+# add col names
+col_names <- data.table(t(as.data.frame(c("", "Fund-month", "Mean", "Std dev", "1\\%", "25\\%", "50\\%", "75\\%", "99\\%"))))
+names(col_names) <- names(data)
+data <- bind_rows(col_names, data)
+rm(col_names)
+
+# start printing
+out <- copy(data)
+align_vector <- paste0("ll", paste0(rep("c", times = ncol(out) - 1), collapse = ""))
+x.side <- xtable(out, align = align_vector)
+
+# Corrected for 9 columns
+this_add_to_row <- list(
+  pos = list(-1, 1, nrow(out)),
+  command = c(
+    "\\toprule & & & & \\multicolumn{5}{c}{Percentiles} \\\\\n \\cmidrule(l){5-9} \n",
+    "\\cmidrule(l){2-9} \\vspace{5pt}",
+    "\\bottomrule \n"
+  )
+)
+
+print(x.side,
+  type = "latex",
+  booktabs = TRUE, # Add this!
+  table.placement = "!ht",
+  include.rownames = FALSE,
+  include.colnames = FALSE,
+  tabular.environment = "tabular",
+  caption.placement = NULL, # "top", NULL
+  hline.after = NULL, # We don't need hline; we use booktabs
+  floating = FALSE, # whether \begin{Table} should be created (TRUE) or not (FALSE)
+  sanitize.text.function = force, # Important to treat content of first column as latex function
+  add.to.row = this_add_to_row
+)
+
+
+print(x.side,
+  type = "latex",
+  booktabs = TRUE, # Add this!
+  table.placement = "!ht",
+  include.rownames = FALSE,
+  include.colnames = FALSE,
+  tabular.environment = "tabular",
+  caption.placement = NULL, # "top", NULL
+  hline.after = NULL, # We don't need hline; we use booktabs
+  floating = FALSE, # whether \begin{Table} should be created (TRUE) or not (FALSE)
+  sanitize.text.function = force, # Important to treat content of first column as latex function
+  add.to.row = this_add_to_row,
+  file = "summary_stats.tex"
+)
+```

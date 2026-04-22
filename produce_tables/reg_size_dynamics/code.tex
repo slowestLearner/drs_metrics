@@ -1,0 +1,115 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[
+]{article}
+\usepackage{xcolor}
+\usepackage[left=1cm,right=1cm,top=0.9cm,bottom=1.2cm]{geometry}
+\usepackage{amsmath,amssymb}
+\setcounter{secnumdepth}{5}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{graphicx}
+\makeatletter
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
+% Set default figure placement to htbp
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage[]{natbib}
+\bibliographystyle{plainnat}
+\usepackage{rotating}
+\usepackage{float}
+\usepackage{natbib}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\author{}
+\date{\vspace{-2.5em}}
+
+\begin{document}
+
+\begin{tabular}{lcccc}
+  \toprule \multicolumn{5}{c}{Panel A: Fund size process ($q_{i,t}$)} \\
+ 
+ \cmidrule(l){2-5}  \vspace{5pt} & (1) & (2) & (3) & (4) \\ 
+  $q_{i,t-1}$ & $0.99^{***}$ & $0.99^{***}$ & $0.99^{***}$ & $0.99^{***}$ \\ 
+   & $(0.00)$ & $(0.00)$ & $(0.00)$ & $(0.00)$ \\ 
+  $R_{i,t}$ & $1.10^{***}$ & $1.10^{***}$ & $1.06^{***}$ & $1.06^{***}$ \\ 
+   & $(0.02)$ & $(0.01)$ & $(0.01)$ & $(0.01)$ \\ 
+  $Perf_{i,t-1}$ & $1.77^{***}$ & $2.32^{***}$ & $1.74^{***}$ & $2.30^{***}$ \\ 
+   & $(0.28)$ & $(0.29)$ & $(0.27)$ & $(0.30)$ \\ 
+  $LogAge_{i,t-1}$ & $-0.03^{***}$ & $-0.02^{***}$ & $-0.02^{***}$ & $-0.02^{***}$ \\ 
+   & $(0.00)$ & $(0.00)$ & $(0.00)$ & $(0.00)$ \\ 
+  $ExpRatio_{i,t-1}$ & $-0.26^{***}$ & $-0.26^{***}$ & $-0.29^{***}$ & $-0.27^{***}$ \\ 
+   & $(0.03)$ & $(0.03)$ & $(0.03)$ & $(0.03)$ \\ 
+  $PerfVol_{i,t-1}$ &  & $-0.12$ &  & $-0.16$ \\ 
+   &  & $(0.09)$ &  & $(0.10)$ \\ 
+  $BretAve_{i,t-1}$ &  & $0.53^{***}$ &  & $0.58^{***}$ \\ 
+   &  & $(0.11)$ &  & $(0.07)$ \\ 
+  $BretVol_{i,t-1}$ &  & $-0.25^{***}$ &  & $-0.04$ \\ 
+   \vspace{5pt} &  & $(0.07)$ &  & $(0.06)$ \\ 
+  Fund FE & Y & Y & Y & Y \\ 
+   \vspace{5pt}Date FE & Y & Y & N & N \\ 
+  Obs & 572,284 & 568,778 & 572,284 & 568,778 \\ 
+  Adj $R^2$ & $0.997$ & $0.997$ & $0.997$ & $0.997$ \\ 
+   \hline \multicolumn{5}{c}{Panel B: Fund fixed effects ($\phi_i$)} \\
+ 
+ \cmidrule(l){2-5} \vspace{5pt} 
+ & (1) & (2) & (3) & (4) \\ 
+  Mean & 0.133 & 0.119 & 0.118 & 0.112 \\ 
+   \vspace{5pt}SD & 0.033 & 0.032 & 0.029 & 0.028 \\ 
+  1\% & 0.053 & 0.042 & 0.047 & 0.041 \\ 
+  25\% & 0.111 & 0.098 & 0.099 & 0.094 \\ 
+  50\% & 0.134 & 0.120 & 0.120 & 0.113 \\ 
+  75\% & 0.155 & 0.140 & 0.139 & 0.131 \\ 
+  99\% & 0.211 & 0.189 & 0.181 & 0.173 \\ 
+   \bottomrule 
+\end{tabular}
+
+\end{document}

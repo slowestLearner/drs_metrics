@@ -1,0 +1,164 @@
+---
+author: ""
+header-includes:
+   - \usepackage{rotating}
+   - \usepackage{float}
+   - \usepackage{natbib}
+   - \usepackage{booktabs}
+   - \usepackage{multirow}
+geometry: "left=1cm,right=1cm,top=0.9cm,bottom=1.2cm"
+output: 
+  pdf_document:
+    citation_package: natbib
+    keep_tex: true
+    number_sections: true
+#bibliography: ref.bib
+link-citations: yes
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r, echo = FALSE, results = 'asis', warning=FALSE, message=FALSE}
+rm(list = ls())
+options(xtable.comment = FALSE)
+library(reshape)
+library(data.table)
+library(dplyr)
+library(naniar)
+library(scales)
+library(tidyr)
+library(xtable)
+library(pracma)
+library(this.path)
+setwd(this.path::this.dir())
+options(width = 180)
+
+# --- panel B, WB
+
+# should multiple coefs
+data <- readRDS("../../tmp/drs/estimation/wb.RDS")[ret.name == "benchmark_adj_gret"]
+data[, coef := 100 * coef]
+data[, se := 100 * se]
+
+# vars
+tmp <- unique(data[, list(var)])
+tmp[, idx := c(1, 4, 2, 3)]
+data <- data[tmp, on = .(var)][, var := paste0(idx, "_", var)][, idx := NULL]
+rm(tmp)
+
+# choose specs
+setnames(data, "size_model", "spec_idx")
+
+# --- panel A, existing method
+tmp <- readRDS("../../tmp/drs/estimation/existing_methods.RDS")[ret.name == "benchmark_adj_gret"]
+tmp[, spec_idx := 1:4]
+tmp[, se := coef / tstat]
+tmp[, nobs := as.numeric(NA)]
+tmp[, marginalR2 := as.numeric(NA)]
+tmp <- tmp[, .(spec_idx = 1:4, ret.name, coef = coef * 100, se = se * 100, nobs = as.numeric(NA), marginalR2 = as.numeric(NA), var = "0_exixting")]
+data <- rbind(tmp, data, use.names = TRUE)
+rm(tmp)
+
+# add stars
+cuts <- abs(qnorm(c(.01, .05, .1) / 2))
+data[, abs_tstat := abs(coef / se)]
+data[, ss := ifelse(abs_tstat > cuts[1], 3, ifelse(abs_tstat > cuts[2], 2, ifelse(abs_tstat > cuts[3], 1, 0)))]
+data[, coef_lab := paste0("$", sprintf("%.3f", coef))]
+data[, ss_lab := sapply(data[, ss], function(x) {
+  ifelse(x > 0,
+    paste0("^{", strcat(rep("*", x)), "}$"),
+    "$"
+  )
+})]
+data[, coef_lab := paste0(coef_lab, ss_lab)]
+data[, ss_lab := NULL]
+data[, se_lab := paste0("$(", sprintf("%.3f", se), ")$")]
+rm(cuts)
+
+est <- cast(data[, list(var, spec_idx, coef_lab)], var ~ spec_idx) %>%
+  dplyr::mutate(group_id = 100 * row_number(), type = "coef") %>%
+  as.data.table()
+est[is.na(est)] <- ""
+est[, var := c("$q_{i,t-1}$", "Intercept", "$\\phi_i$", "$q_{i,0}$", "$q_{i,t-1}$")]
+
+se <- cast(data[, list(var, spec_idx, se_lab)], var ~ spec_idx) %>%
+  dplyr::mutate(group_id = 100 * row_number() + 1, type = "se_lab") %>%
+  mutate(var = "") %>%
+  as.data.table()
+se[is.na(se)] <- ""
+
+tbl <- rbind(est, se)[order(group_id)]
+rm(est, se)
+
+# # note controls
+# ctrls <- data.table(
+#   var = c("Fund FE", "Date FE"),
+#   `1` = c("Y", "Y"), `2` = c("Y", "Y"),
+#   `3` = c("Y", "N"), `4` = c("Y", "N"), group_id = 1000 + 0:1, type = ""
+# )
+# tbl <- bind_rows(tbl, ctrls)
+# rm(ctrls)
+
+# why twice as large? CHECK. Daily regressions
+obs_and_r2 <- unique(data[!is.na(nobs), list(spec_idx, obs = nobs, r2 = marginalR2)]) %>%
+  mutate(
+    obs = comma(obs),
+    r2 = paste0("$", sprintf("%.3f", r2), "$")
+  ) %>%
+  pivot_longer(., -spec_idx) %>%
+  pivot_wider(name, names_from = "spec_idx", values_from = "value") %>%
+  dplyr::mutate(name = replace(name, name == "r2", "Marginal $R^2$")) %>%
+  mutate(name = replace(name, name == "obs", "Obs")) %>%
+  rename(var = name) %>%
+  mutate(group_id = 2000 + 0:1, type = "")
+tbl <- bind_rows(tbl, obs_and_r2)
+rm(obs_and_r2)
+tbl[, c("group_id", "type") := NULL]
+
+# col_names <- data.table(t(as.data.frame(c("", paste0("(", 1:(ncol(tbl) - 1), ")")))))
+# names(col_names) <- names(tbl)
+# tbl <- rbind(col_names, tbl)
+# rm(col_names)
+
+align_vactor <- paste0("ll", paste0(rep("c", times = ncol(tbl) - 1), collapse = ""))
+x.side <- xtable(tbl, align = align_vactor)
+
+this_add_to_row <- list(
+  pos = list(-1, 1, 2, 9, nrow(tbl)),
+  command = c(
+    "\\toprule \\multicolumn{5}{c}{Dependent variable: $r_{i,t} (\\%)$} \\\\\n \\hline
+    \\multicolumn{5}{c}{Panel A: DRS by existing methods} \\\\\n \n & OLS & FE & RD & RE \\\\\n \n \\cmidrule(l){2-5} \n",
+    "\\vspace{5pt} \n",
+    "\\hline \\multicolumn{5}{c}{Panel B: DRS by WB} \\\\\n \n \\cmidrule(l){2-5} & (1) & (2) & (3) & (4) \\vspace{5pt} \\\\\n",
+    "\\vspace{5pt} \n",
+    "\\bottomrule \n"
+  )
+)
+
+print(x.side,
+  type = "latex",
+  table.placement = "!ht",
+  include.rownames = FALSE,
+  include.colnames = FALSE,
+  tabular.environment = "tabular",
+  caption.placement = NULL, # "top", NULL
+  hline.after = NULL, # We don't need hline; we use booktabs
+  floating = FALSE, # whether \begin{Table} should be created (TRUE) or not (FALSE)
+  sanitize.text.function = force, # Important to treat content of first column as latex function
+  add.to.row = this_add_to_row
+)
+
+print(x.side,
+  type = "latex",
+  table.placement = "!ht",
+  include.rownames = FALSE,
+  include.colnames = FALSE,
+  tabular.environment = "tabular",
+  caption.placement = NULL, # "top", NULL
+  hline.after = NULL, # We don't need hline; we use booktabs
+  floating = FALSE, # whether \begin{Table} should be created (TRUE) or not (FALSE)
+  sanitize.text.function = force, # Important to treat content of first column as latex function
+  add.to.row = this_add_to_row,
+  file = "reg_drs.tex"
+)
+```
