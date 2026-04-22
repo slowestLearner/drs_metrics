@@ -27,6 +27,7 @@ renv/library/
 figs/
 tmp/
 *.mp4
+*.pptx
 
 # Large data files - track small data, but not large raw files
 *.RDS
