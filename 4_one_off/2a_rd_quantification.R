@@ -1,7 +1,7 @@
 # --- Let me use Table 4 of Zhu (2018)
 library(this.path)
 setwd(this.path::this.dir())
-source("../runmefirst.R")
+source("../utility_functions/runmefirst.R")
 
 # Table 4
 data <- data.table(

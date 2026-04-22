@@ -1,11 +1,11 @@
-# --- Do risk-adjustments. First do rolling, and then do full-sample
+# --- Compute factor-adjusted fund returns. Do both rolling and full-sample.
 
 # load libraries
 library(this.path)
 setwd(this.path::this.dir())
-source("../runmefirst.R")
+source("../utility_functions/runmefirst.R")
 
-# get each fund, use rolling 36m regressions... for the initial, can use the burn-in period
+# get each fund, use rolling 36m regressions to compute alphas
 data <- readRDS("../../../data/funds/active_equity_fund_monthly_data.RDS")[, .(yyyymm, wficn, ret)]
 data[, ret := Winsorize(ret, quantile(ret, probs = c(.005, .995))), yyyymm]
 
@@ -46,7 +46,6 @@ dir.create(to_dir, recursive = T, showWarnings = F)
 # take out those already done
 time_data <- time_data[!(yyyymm %in% as.integer(gsub(".RDS", "", list.files(to_dir))))]
 
-# this is faster as it uses parallel structure within data.table
 for (this_idx in time_data[, idx]) {
   tic(time_data[idx == this_idx, yyyymm])
   # 1. Filter the rolling window for the whole month

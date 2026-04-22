@@ -1,9 +1,9 @@
-# --- later directly download from CRSP. For now, just move
+# --- This code moves some of the input data from J's computer to the dropbox folder. No need to run this. This is just an attempt to keep track of where data came from. When we produce a replication codebase, I will change the code to download from WRDS, etc.
 
-# load librarities
+# load libraries
 library(this.path)
 setwd(this.path::this.dir())
-source("../runmefirst.R")
+source("../utility_functions/runmefirst.R")
 library(zoo)
 
 # -------- market cap ---------
@@ -59,35 +59,3 @@ data <- data[mtna_1 >= 1]
 to_dir <- "../../../data/funds/"
 dir.create(to_dir, recursive = T, showWarnings = F)
 saveRDS(data, paste0(to_dir, "active_equity_fund_monthly_data.RDS"))
-
-# ------- bid-ask spreads from multiple sources -------
-
-
-# # --- compare with min's data
-# ls(list = ls())
-
-# data <- readRDS("../../../data/funds/active_equity_fund_monthly_data.RDS")
-# data <- data[, .(type = "j", obs = .N, size = sum(mtna_1 / 1e3)), yyyymm]
-
-# load("../../../Data_M/MFdata.RData")
-# dat <- dat %>% as.data.table()
-# dat[, yyyymm := year(caldt_end) * 100 + month(caldt_end)]
-# dat <- dat[, .(type = "min", obs = .N, size = sum(tna / 1e3)), yyyymm]
-# data <- rbind(data, dat)
-# rm(dat)
-
-# data[, date := as.Date(paste0(yyyymm, "01"), format = "%Y%m%d")]
-
-# ggplot(data, aes(x = date, y = size, color = type)) +
-#     geom_line(lwd = 2) +
-#     theme_minimal() +
-#     theme(legend.position = c(.2, .8), legend.title = element_blank(), text = element_text(size = 30)) +
-#     labs(x = "Date", y = element_blank(), color = "Data Source") +
-#     ggtitle("Total Size of Active Equity Funds (billions)")
-
-# ggplot(data, aes(x = date, y = obs, color = type)) +
-#     geom_line(lwd = 2) +
-#     theme_minimal() +
-#     theme(legend.position = c(.2, .8), legend.title = element_blank(), text = element_text(size = 30)) +
-#     labs(x = "Date", y = element_blank(), color = "Data Source") +
-#     ggtitle("Num funds")

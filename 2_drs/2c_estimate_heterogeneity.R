@@ -1,7 +1,7 @@
 # --- estimate DRS heterogeneity using full-sample regressions
 library(this.path)
 setwd(this.path::this.dir())
-source("../runmefirst.R")
+source("../utility_functions/runmefirst.R")
 
 ########################## load data  ##########################################
 

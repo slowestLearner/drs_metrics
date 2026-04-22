@@ -1,7 +1,7 @@
 # --- Put together inputs (mu, Sigma) for subsequent portfolio optimization
 library(this.path)
 setwd(this.path::this.dir())
-source("../runmefirst.R")
+source("../utility_functions/runmefirst.R")
 
 # get covariance and returns by sample
 data <- readRDS("../../../data/factors/2x4x4_ff_portfolios.RDS")

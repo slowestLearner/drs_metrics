@@ -1,7 +1,7 @@
 # --- code to summarize DRS and plot
 library(this.path)
 setwd(this.path::this.dir())
-source("../runmefirst.R")
+source("../utility_functions/runmefirst.R")
 
 # read results
 from_dir <- "../tmp/simulation/drs/nsim_1000_archive/"

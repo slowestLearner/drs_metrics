@@ -1,7 +1,7 @@
 # --- Let's estimate the impact of annual performance on size
 library(this.path)
 setwd(this.path::this.dir())
-source("../runmefirst.R")
+source("../utility_functions/runmefirst.R")
 
 
 # summarize by year

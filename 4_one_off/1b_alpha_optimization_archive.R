@@ -1,7 +1,7 @@
 # --- Do port opt
 library(this.path)
 setwd(this.path::this.dir())
-source("../runmefirst.R")
+source("../utility_functions/runmefirst.R")
 library(Matrix)
 library(osqp)
 

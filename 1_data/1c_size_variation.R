@@ -1,7 +1,7 @@
 # --- Look at how large is size variation
 library(this.path)
 setwd(this.path::this.dir())
-source("../runmefirst.R")
+source("../utility_functions/runmefirst.R")
 options(width = 150)
 
 # get data
